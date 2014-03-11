@@ -1,11 +1,11 @@
 <?php
 //The template parser isn't a parser in the computer science way of putting it.
-//Anyways it is doing a pretty good job on templates inside templates etc.
+//Anyway it is doing a pretty good job on templates inside templates etc.
 //
 //Some problems are not solved yet:
 //-nowiki, pre, includeonly, noinclude, onlyinclude, html-comments
 //-the list of Magic Words is far from complete (see http://www.mediawiki.org/wiki/Help:Magic_words)
-//-simple links with a maximum of one "|" work - pictures with more than on don't
+//-simple links with a maximum of one "|" work - pictures with more than one do not
 
 class TemplateParser {
 

@@ -11,7 +11,7 @@ $wgExtensionCredits['specialpage'][] = array(
 	'name' => 'Template Edit',
 	'version' => '0.6',
 	'author' => array( 'VolkoV' ),
-	'url' => 'http://www.garetien.de',
+	'url' => 'https://www.mediawiki.org/wiki/Extension:TemplateEdit',
 	'descriptionmsg'  => 'templateedit-description',
 );
 
