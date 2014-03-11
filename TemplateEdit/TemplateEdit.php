@@ -9,7 +9,7 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
 $wgExtensionCredits['specialpage'][] = array(
 	'path' => __FILE__,
 	'name' => 'Template Edit',
-	'version' => '0.5',
+	'version' => '0.6',
 	'author' => array( 'VolkoV' ),
 	'url' => 'http://www.garetien.de',
 	'descriptionmsg'  => 'templateedit-description',
