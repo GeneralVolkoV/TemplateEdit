@@ -22,6 +22,23 @@ class TemplateEdit extends SpecialPage {
 		return true;
 	}
 
+	static public function SkinTemplateNavigationUniversal( $skin, &$content_actions ) {
+		$title = $skin->getTitle();
+		$href = SpecialPage::getTitleFor( 'TemplateEdit' )->getLocalURL(Array("article"=>$title->getPrefixedDBkey()));
+		if( $title->quickUserCan( 'edit' ) && $title->exists() ) {
+			$content_actions['views'] = array_slice($content_actions['views'], 0, 2, true) +
+			array('templateedit' => array(
+				'class' => false,
+				'text' => wfMsg('templateedit-tabdescription'),
+				'href' => $href,
+				'primary' => true,
+			)) +
+			array_slice($content_actions['views'],2,count($content_actions['views']) - 1, true);
+		}
+		return true;
+	}
+
+	
 	function execute( $subPage ) {
 		global $wgUser, $wgOut, $wgRequest, $wgLang;
 
