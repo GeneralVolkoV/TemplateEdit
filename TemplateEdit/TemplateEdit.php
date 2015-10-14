@@ -9,7 +9,7 @@ if ( !defined( 'MEDIAWIKI' ) ) die();
 $wgExtensionCredits['specialpage'][] = array(
 	'path' => __FILE__,
 	'name' => 'Template Edit',
-	'version' => '0.6',
+	'version' => '0.7.1',
 	'author' => array( 'VolkoV' ),
 	'url' => 'https://www.mediawiki.org/wiki/Extension:TemplateEdit',
 	'descriptionmsg'  => 'templateedit-description',
@@ -21,7 +21,7 @@ $wgHooks['AdminLinks'][] = 'TemplateEdit::addToAdminLinks';
 // This extension uses its own permission type, 'replacetext'
 $wgSpecialPages['TemplateEdit'] = 'TemplateEdit';
 $wgSpecialPageGroups['TemplateEdit'] = 'wiki';
-$wgAutoloadClasses['TemplateParser'] = $rtgIP . 'TemplateParser.php';
+$wgAutoloadClasses['TemplateEditParser'] = $rtgIP . 'TemplateEditParser.php';
 $wgAutoloadClasses['TemplateEdit']   = $rtgIP . 'SpecialTemplateEdit.php';
 
 $wgExtensionAliasesFiles['TemplateEdit'] = $rtgIP . 'TemplateEdit.alias.php';

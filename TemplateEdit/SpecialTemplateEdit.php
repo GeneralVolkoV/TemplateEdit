@@ -37,6 +37,7 @@ class TemplateEdit extends SpecialPage {
 		//Title valid
 		$title=Title::newFromText($this->article);
 		if($title!=null) {
+			$wgOut->setPageTitle($title->getBaseText().' - '.wfMsg('templateedit'));
 			if ( ! $title->userCan( 'edit' ) ) {
 				$wgOut->permissionRequired( 'edit' );
 				return;
@@ -92,7 +93,7 @@ class TemplateEdit extends SpecialPage {
 	function showSelectTemplateForm($title,$source) {
 		global $wgOut;
 		if($source=="") die ('Something is wrong!');
-		$templates=TemplateParser::getTemplates($source);
+		$templates=TemplateEditParser::getTemplates($source);
 		$wgOut->addWikiText('[[:'.$title->getPrefixedText().']]');
 		$wgOut->addHTML(
 			Xml::openElement( 'form', array( 'id' => 'templateedit', 'action' => $this->getTitle()->getFullUrl(), 'method' => 'post' ) ) .
@@ -158,10 +159,9 @@ class TemplateEdit extends SpecialPage {
 		$must='';
 		if($def['must'])
 			$must='<span style="color:red;">'.wfMsg('templateedit-mustfield').'</span> ';
-		$wgOut->addHTML(
-			'<tr><td style="border-bottom:1px solid gray;"><b>'.$name.':</b><br/> '
-			.$must.$def['description'].'</td><td style="border-bottom:1px solid gray;">'
-		);
+		$wgOut->addHTML('<tr><td style="border-bottom:1px solid gray;"><b>'.$name.':</b><br/> '.$must);
+		$wgOut->addHTML($wgOut->parse($def['description'],false));
+		$wgOut->addHTML('</td><td style="border-bottom:1px solid gray;">');
 		if($def['type']=='PICK') {
 			$wgOut->addHTML(
 				Xml::openElement( 'select', array('name'=>$techname,'size'=>'1', 'style' => 'width: 95%;'.$style ) )
@@ -198,7 +198,7 @@ class TemplateEdit extends SpecialPage {
 	function showEditForm($title,$source) {
 		global  $wgOut;
 		if($source=="") die ('Something is wrong!');
-		$templateparts=TemplateParser::getTemplateParts($source,$this->template);
+		$templateparts=TemplateEditParser::getTemplateParts($source,$this->template);
 //		print_r($templateparts);
 		$definitions=$this->getTemplateDefinitions($templateparts['template']);
 		$wgOut->addWikiText(wfMsg('templateedit-editformintro',$title->getPrefixedText(),$templateparts['template']));
@@ -246,7 +246,7 @@ class TemplateEdit extends SpecialPage {
 	function showSavedMessage($title,$source,$article) {
 		global $wgOut,$wgRequest;
 		if($source=="") die ('Something is wrong!');
-		$templateparts=TemplateParser::getTemplateParts($source,$this->template);
+		$templateparts=TemplateEditParser::getTemplateParts($source,$this->template);
 		$definitions=$this->getTemplateDefinitions($templateparts['template']);
 		$indexedtp=Array();
 		for($i=0;$i<count($templateparts['params']);$i++) {
@@ -283,7 +283,7 @@ class TemplateEdit extends SpecialPage {
 			}
 		}
 
-		$newsource=TemplateParser::replaceTemplate($source,$this->template,$insert);
+		$newsource=TemplateEditParser::replaceTemplate($source,$this->template,$insert);
 		$article->doEdit( $newsource,wfMsg('templateedit-templateedited',$templateparts['template']), null );
 		$wgOut->addWikiText('[[:'.$title->getPrefixedText().']]');
 		$wgOut->addHTML(

@@ -1,13 +1,14 @@
 <?php
+
 //The template parser isn't a parser in the computer science way of putting it.
-//Anyway it is doing a pretty good job on templates inside templates etc.
+//Anyways it is doing a pretty good job on templates inside templates etc.
 //
 //Some problems are not solved yet:
 //-nowiki, pre, includeonly, noinclude, onlyinclude, html-comments
 //-the list of Magic Words is far from complete (see http://www.mediawiki.org/wiki/Help:Magic_words)
-//-simple links with a maximum of one "|" work - pictures with more than one do not
+//-simple links with a maximum of one "|" work - pictures with more than on don't
 
-class TemplateParser {
+class TemplateEditParser {
 
 	//This function recursively divides the source into elements , which can either be
 	//"UNPARSED" source, "IN" brackets "{{" or "OUT" brackets "}}"
@@ -22,7 +23,7 @@ class TemplateParser {
 			//nothing found - recursion ends.
 			$elements[]=Array('type'=>'UNPARSED','source'=>$article);
 			return;
-		}
+		} 
 		$type='IN';
 		$i=$i1;
 		$source='{{';
@@ -44,10 +45,10 @@ class TemplateParser {
 		//divide the article source and recursively call this function on both parts
 		//TODO: shouldn't the second part be sufficient?
 		$part1=substr($article,0,$i);
-		TemplateParser::tokenizeTemplates($elements,$part1);
+		TemplateEditParser::tokenizeTemplates($elements,$part1);
 		$elements[]=Array('type'=>$type,'source'=>$source);
 		$part2=substr($article,$i+2);
-		TemplateParser::tokenizeTemplates($elements,$part2);
+		TemplateEditParser::tokenizeTemplates($elements,$part2);
 	}
 
 	//Add a level field to all elements to later find matching closing brackets
@@ -165,7 +166,7 @@ class TemplateParser {
 	// $elements is the array to get the information from
 	// $index is the index of the template begin
 	protected static function getFullTemplate($elements,$index) {
-		$closing=TemplateParser::getTemplateEnd($elements,$index);
+		$closing=TemplateEditParser::getTemplateEnd($elements,$index);
 		if($closing==-1) return;
 
 		$result=$elements[$index]['params'];
@@ -206,11 +207,11 @@ class TemplateParser {
 	//the public function to get the list of templates for the article's source
 	public static function getTemplates($source) {
 		$elements=Array();
-		TemplateParser::tokenizeTemplates($elements,$source);
-		TemplateParser::parseTemplateStructure($elements);
-		TemplateParser::removeMagicWordsAndParserFunctions($elements);
-		TemplateParser::explodeTemplates($elements);
-		$templatelist=TemplateParser::getTemplateList($elements);
+		TemplateEditParser::tokenizeTemplates($elements,$source);
+		TemplateEditParser::parseTemplateStructure($elements);
+		TemplateEditParser::removeMagicWordsAndParserFunctions($elements);
+		TemplateEditParser::explodeTemplates($elements);
+		$templatelist=TemplateEditParser::getTemplateList($elements);
 		$result=Array();
 		for($i=0;$i<count($templatelist);$i++)
 			$result[]=Array(
@@ -223,27 +224,27 @@ class TemplateParser {
 	//the public funtion to get a template with all params depending on soucr and index
 	public static function getTemplateParts($source,$index) {
 		$elements=Array();
-		TemplateParser::tokenizeTemplates($elements,$source);
-		TemplateParser::parseTemplateStructure($elements);
-		TemplateParser::removeMagicWordsAndParserFunctions($elements);
-		TemplateParser::explodeTemplates($elements);
-		$templatelist=TemplateParser::getTemplateList($elements);
-		$result=TemplateParser::getFullTemplate($elements,$templatelist[$index]);
+		TemplateEditParser::tokenizeTemplates($elements,$source);
+		TemplateEditParser::parseTemplateStructure($elements);
+		TemplateEditParser::removeMagicWordsAndParserFunctions($elements);
+		TemplateEditParser::explodeTemplates($elements);
+		$templatelist=TemplateEditParser::getTemplateList($elements);
+		$result=TemplateEditParser::getFullTemplate($elements,$templatelist[$index]);
 		return $result;
 	}
 
 	//the public function to replace one template defined by index in the source
 	public static function replaceTemplate($source,$index,$replace) {
 		$elements=Array();
-		TemplateParser::tokenizeTemplates($elements,$source);
-		TemplateParser::parseTemplateStructure($elements);
-		TemplateParser::removeMagicWordsAndParserFunctions($elements);
-		TemplateParser::explodeTemplates($elements);
-		$templatelist=TemplateParser::getTemplateList($elements);
-		$closing=TemplateParser::getTemplateEnd($elements,$templatelist[$index]);
-		$result=TemplateParser::getSource($elements,0,$templatelist[$index]);
+		TemplateEditParser::tokenizeTemplates($elements,$source);
+		TemplateEditParser::parseTemplateStructure($elements);
+		TemplateEditParser::removeMagicWordsAndParserFunctions($elements);
+		TemplateEditParser::explodeTemplates($elements);
+		$templatelist=TemplateEditParser::getTemplateList($elements);
+		$closing=TemplateEditParser::getTemplateEnd($elements,$templatelist[$index]);
+		$result=TemplateEditParser::getSource($elements,0,$templatelist[$index]);
 		$result.=$replace;
-		$result.=TemplateParser::getSource($elements,$closing,count($elements));
+		$result.=TemplateEditParser::getSource($elements,$closing,count($elements));
 		return $result;
 	}
 
