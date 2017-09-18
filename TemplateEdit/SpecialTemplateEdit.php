@@ -12,7 +12,7 @@ class TemplateEdit extends SpecialPage {
 	}
 
 	static public function addToAdminLinks( &$admin_links_tree ) {
-		$general_section = $admin_links_tree->getSection( wfMsg( 'adminlinks_general' ) );
+		$general_section = $admin_links_tree->getSection( wfMessage( 'adminlinks_general' )->text() );
         	$extensions_row = $general_section->getRow( 'extensions' );
 		if ( is_null( $extensions_row ) ) {
 			$extensions_row = new ALRow( 'extensions' );
@@ -22,28 +22,12 @@ class TemplateEdit extends SpecialPage {
 		return true;
 	}
 
-	static public function SkinTemplateNavigationUniversal( $skin, &$content_actions ) {
-		$title = $skin->getTitle();
-		$href = SpecialPage::getTitleFor( 'TemplateEdit' )->getLocalURL(Array("article"=>$title->getPrefixedDBkey()));
-		if( $title->quickUserCan( 'edit' ) && $title->exists() ) {
-			$content_actions['views'] = array_slice($content_actions['views'], 0, 2, true) +
-			array('templateedit' => array(
-				'class' => false,
-				'text' => wfMsg('templateedit-tabdescription'),
-				'href' => $href,
-				'primary' => true,
-			)) +
-			array_slice($content_actions['views'],2,count($content_actions['views']) - 1, true);
-		}
-		return true;
-	}
-
-	
 	function execute( $subPage ) {
 		global $wgUser, $wgOut, $wgRequest, $wgLang;
 
 		$this->article=$wgRequest->getText('article');
 		$this->articleprefix=$wgRequest->getText('articleprefix');
+		$this->articleautomatic=$wgRequest->getText('articleautomatic');
 		$this->templatename=$wgRequest->getText('templatename');
 		$this->template=$wgRequest->getText('template');
 		$this->save=$wgRequest->getText('save');
@@ -54,9 +38,8 @@ class TemplateEdit extends SpecialPage {
 		//Title valid
 		$title=Title::newFromText($this->article);
 		if($title!=null) {
-			$wgOut->setPageTitle($title->getBaseText().' - '.wfMsg('templateedit'));
 			if ( ! $title->userCan( 'edit' ) ) {
-				$wgOut->permissionRequired( 'edit' );
+				throw new PermissionsError( 'edit' );
 				return;
 			}
 			$source="";
@@ -67,8 +50,10 @@ class TemplateEdit extends SpecialPage {
 					$source=$article->getContent();
 				} elseif ($this->templatename!='') {
 					//New article
-					$source='{{'.$this->templatename.'}}';
-					$article->doEdit( $source,wfMsg('templateedit-templatecreated',$this->templatename), null );
+					$source="{{".$this->templatename."}}";
+					if($this->articleautomatic=="1")
+						$source.="\n\n(Beschreibungstext fehlt).\n\n{{".$this->templatename." Automatik}}";
+					$article->doEdit( $source,wfMessage('templateedit-templatecreated',$this->templatename)->text(), null );
 				}
 			};
 			//No template selected
@@ -95,14 +80,15 @@ class TemplateEdit extends SpecialPage {
 	function showStartingForm() {
 		global  $wgOut;
 		if ($this->templatename!="")
-			$wgOut->addWikiText(wfMsg('templateedit-createwithtemplate',$this->templatename));
+			$wgOut->addWikiText(wfMessage('templateedit-createwithtemplate',$this->templatename)->text());
 		$wgOut->addHTML(
 			Xml::openElement( 'form', array( 'id' => 'templateedit', 'action' => $this->getTitle()->getFullUrl(), 'method' => 'post' ) ) .
 			html::hidden( 'title', $this->getTitle()->getPrefixedText() ) .
 			html::hidden( 'templatename', $this->templatename ) .
-			Xml::tags( 'p', null , wfMsg('templateedit-showstartingform') ) .
+			html::hidden( 'articleautomatic', $this->articleautomatic ) .
+			Xml::tags( 'p', null , $this->msg('templateedit-showstartingform')->text() ) .
 			Xml::input( 'article', 50, $this->articleprefix ) .
-			Xml::submitButton(wfMsg('templateedit-continue')) .
+			Xml::submitButton(wfMessage('templateedit-continue')->text()) .
 			Xml::closeElement( 'form' )
 		);
 	}
@@ -116,23 +102,23 @@ class TemplateEdit extends SpecialPage {
 			Xml::openElement( 'form', array( 'id' => 'templateedit', 'action' => $this->getTitle()->getFullUrl(), 'method' => 'post' ) ) .
 			html::hidden( 'title',  $this->getTitle()->getPrefixedText() ) .
 			html::hidden( 'article', $this->article ).
-			Xml::tags( 'p', null , wfMsg('templateedit-showselecttemplateform') )
+			Xml::tags( 'p', null , wfMessage('templateedit-showselecttemplateform')->text() )
 		);
 
 		for($i=0;$i<count($templates);$i++)
 			$wgOut->addHTML( Xml::radio( "template", "$i", $i==0 ,
-				Array('style'=>'margin-left:'.$templates[$i]["level"].'em;') ).$templates[$i]["name"]."<br />"
+				Array('style'=>'margin-left:'.$templates[$i]["level"].'em;') )."<b>".$templates[$i]["name"]."</b> (".$templates[$i]["source"]."...)<br />"
 			);
 
 		$wgOut->addHTML(
-			Xml::submitButton(wfMsg('templateedit-continue')) .
+			Xml::submitButton(wfMessage('templateedit-continue')->text()) .
 			Xml::closeElement( 'form' )
 		);
 	}
 
 	function getTemplateDefinitions($template) {
 		$this->deleteold=TRUE;
-		$title=Title::newFromText(wfMsg('templateedit-templateeditortitle',$template));
+		$title=Title::newFromText(wfMessage('templateedit-templateeditortitle',$template)->text());
 		if(($title!=null)&&($title->exists())) {
 			$article=new Article($title);
 			$source=$article->getContent();
@@ -145,24 +131,26 @@ class TemplateEdit extends SpecialPage {
 			for($i=0;$i<count($fields);$i++) {
 				$explode=explode("=",$fields[$i],2);
 				if(count($explode)==1) $explode[]='TEXT!!!';
-				$params=explode("!",$explode[1],5);
+				$params=explode("!",$explode[1],6);
 				if(count($params)<1) $params[]='TEXT';
 				if(count($params)<2) $params[]='';
 				if(count($params)<3) $params[]='';
 				if(count($params)<4) $params[]='';
 				if(count($params)<5) $params[]='';
+				if(count($params)<6) $params[]='';
 				$indexedfields[$explode[0]]=Array(
 					'type'        => $params[0],
 					'must'        => ($params[1]=='MUST'),
 					'description' => $params[2],
 					'picklist'    => $params[3],
-					'default'	=> $params[4],
+					'default'	  => $params[4],
+					'migration'	  => $params[5],
 				);
 			}
 			return $indexedfields;
 		}
 		$this->deleteold=FALSE;
-		return Array(wfMsg('templateedit-noeditor')=>Array('type'=>'TITLE','must'=>FALSE,'description'=>'','picklist'=>''));
+		return Array(wfMessage('templateedit-noeditor')->text()=>Array('type'=>'TITLE','must'=>FALSE,'description'=>'','picklist'=>''));
 	}
 
 	function addInput($wgOut,$name,$def,$value,$style) {
@@ -175,10 +163,11 @@ class TemplateEdit extends SpecialPage {
 		}
 		$must='';
 		if($def['must'])
-			$must='<span style="color:red;">'.wfMsg('templateedit-mustfield').'</span> ';
-		$wgOut->addHTML('<tr><td style="border-bottom:1px solid gray;"><b>'.$name.':</b><br/> '.$must);
-		$wgOut->addHTML($wgOut->parse($def['description'],false));
-		$wgOut->addHTML('</td><td style="border-bottom:1px solid gray;">');
+			$must='<span style="color:red;">'.wfMessage('templateedit-mustfield')->text().'</span> ';
+		$wgOut->addHTML(
+			'<tr><td style="border-bottom:1px solid gray;"><b>'.$name.':</b><br/> '
+			.$must.$def['description'].'</td><td style="border-bottom:1px solid gray;">'
+		);
 		if($def['type']=='PICK') {
 			$wgOut->addHTML(
 				Xml::openElement( 'select', array('name'=>$techname,'size'=>'1', 'style' => 'width: 95%;'.$style ) )
@@ -200,13 +189,20 @@ class TemplateEdit extends SpecialPage {
 			$wgOut->addHTML(
 				Xml::textarea( $techname, $value , 50, 5, array( 'style' => 'width: 95%;'.$style ) )
 			);
-		if(($def['type']=='TEXT')||($def['type']=='LINK')||($def['type']=='NUMBER'))
+		if(($def['type']=='TEXT')||($def['type']=='LINK')||($def['type']=='LINKNONS')||($def['type']=='NUMBER')) {
+			$newvalue=$value;
+			if($def['type']=='LINK') 
+				$newvalue=preg_replace('%\[\[([^:\|\]]*:|)([^\|\]]+)(\|[^\]]*|)\]\]%','$1$2',$value);
+			if($def['type']=='LINKNONS') 
+				$newvalue=preg_replace('%\[\[([^:\|\]]*:|)([^\|\]]+)(\|[^\]]*|)\]\]%','$2',$value);
+			//background-color:#ffff7f;
 			$wgOut->addHTML(
-				Xml::input( $techname, 250, $value , array( 'style' => 'width: 95%;'.$style ) )
+				Xml::input( $techname, 250, $newvalue , array( 'style' => 'width: 95%;'.$style ) )
 			);
+		}
 		if($def['type']=='OLD')
 			$wgOut->addHTML(
-				Xml::checklabel( wfMsg('templateedit-remove') , 'Remove'.$techname , 'Remove'.$techname , $this->deleteold ) .
+				Xml::checklabel( wfMessage('templateedit-remove')->text() , 'Remove'.$techname , 'Remove'.$techname , $this->deleteold ) .
 				Xml::input( $techname, 250, $value , array( 'style' => 'width: 95%; background-color:#ff7f7f;'.$style ) )
 			);
 		$wgOut->addHTML('</td></tr>');
@@ -218,14 +214,15 @@ class TemplateEdit extends SpecialPage {
 		$templateparts=TemplateEditParser::getTemplateParts($source,$this->template);
 //		print_r($templateparts);
 		$definitions=$this->getTemplateDefinitions($templateparts['template']);
-		$wgOut->addWikiText(wfMsg('templateedit-editformintro',$title->getPrefixedText(),$templateparts['template']));
+		$wgOut->addWikiText(wfMessage('templateedit-editformintro',$title->getPrefixedText(),$templateparts['template'])->text());
 		$wgOut->addHTML(
 			Xml::openElement( 'form', array( 'id' => 'templateedit', 'action' => $this->getTitle()->getFullUrl(), 'method' => 'post' ) ) .
+			Xml::submitButton(wfMessage('templateedit-save')->text()) .
 			html::hidden( 'title',  $this->getTitle()->getPrefixedText() ) .
 			html::hidden( 'article', $this->article ).
 			html::hidden( 'template', $this->template ).
 			html::hidden( 'save', "1" ).
-			Xml::tags( 'p', null , wfMsg('templateedit-showeditform') ) .
+			Xml::tags( 'p', null , wfMessage('templateedit-showeditform')->text() ) .
 			Xml::openElement('table', array('style' => 'border-collapse:collapse;') )
 		);
 		$indexedtp=Array();
@@ -240,22 +237,28 @@ class TemplateEdit extends SpecialPage {
 				$background='';
 			} else {
 				$value=$def['default'];
-				$def['description'].=' '.wfMsg('templateedit-fieldundefined');
+				$def['description'].=' '.wfMessage('templateedit-fieldundefined')->text();
 				$background='background-color:#ffff7f;';
+			}
+			if($def['migration']!="") {
+				$migs=explode(';',$def['migration']);
+				foreach($migs as $mig)
+					$value.=' '.$indexedtp[$mig]['value'];
+				$value=trim($value);
 			}
 			$this->addInput($wgOut,$name,$def,$value,$background);
 		};
 		$def=Array('type'=>'TITLE','must'=>FALSE,'description'=>'','picklist'=>'');
-		$this->addInput($wgOut,wfMsg('templateedit-oldfieldstitle'),$def,'','');
+		$this->addInput($wgOut,wfMessage('templateedit-oldfieldstitle')->text(),$def,'','');
 		foreach($indexedtp as $name=>$field)
 			if(!$field['used']) {
-			$def=Array('type'=>'OLD','must'=>FALSE,'description'=>wfMsg('templateedit-oldfield'),'picklist'=>'');
+			$def=Array('type'=>'OLD','must'=>FALSE,'description'=>wfMessage('templateedit-oldfield')->text(),'picklist'=>'');
 			$this->addInput($wgOut,$name,$def,$field['value'],'');
 		};
 
 		$wgOut->addHTML(
 			Xml::closeElement( 'table' ) .
-			Xml::submitButton(wfMsg('templateedit-save')) .
+			Xml::submitButton(wfMessage('templateedit-save')->text()) .
 			Xml::closeElement( 'form' )
 		);
 	}
@@ -280,7 +283,7 @@ class TemplateEdit extends SpecialPage {
 			$techname="Field".str_replace(' ','',$name);
 			if((!$field['used'])&&($wgRequest->getText('Remove'.$techname)!='1')) {
 				$definitions[$name]=Array(
-					'type'=>'OLD','must'=>FALSE,'description'=>wfMsg('templateedit-oldfield'),'picklist'=>'',
+					'type'=>'OLD','must'=>FALSE,'description'=>wfMessage('templateedit-oldfield')->text(),'picklist'=>'',
 					'value'=>$wgRequest->getText($techname)
 				);
 			}
@@ -301,10 +304,10 @@ class TemplateEdit extends SpecialPage {
 		}
 
 		$newsource=TemplateEditParser::replaceTemplate($source,$this->template,$insert);
-		$article->doEdit( $newsource,wfMsg('templateedit-templateedited',$templateparts['template']), null );
+		$article->doEdit( $newsource,wfMessage('templateedit-templateedited',$templateparts['template'])->text(), null );
 		$wgOut->addWikiText('[[:'.$title->getPrefixedText().']]');
 		$wgOut->addHTML(
-			Xml::tags( 'p', null , wfMsg('templateedit-articlesaved') )
+			Xml::tags( 'p', null , wfMessage('templateedit-articlesaved')->text() )
 		);
 	}
 

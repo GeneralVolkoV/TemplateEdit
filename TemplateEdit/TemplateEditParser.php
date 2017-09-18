@@ -1,5 +1,4 @@
 <?php
-
 //The template parser isn't a parser in the computer science way of putting it.
 //Anyways it is doing a pretty good job on templates inside templates etc.
 //
@@ -23,7 +22,7 @@ class TemplateEditParser {
 			//nothing found - recursion ends.
 			$elements[]=Array('type'=>'UNPARSED','source'=>$article);
 			return;
-		} 
+		}
 		$type='IN';
 		$i=$i1;
 		$source='{{';
@@ -216,7 +215,8 @@ class TemplateEditParser {
 		for($i=0;$i<count($templatelist);$i++)
 			$result[]=Array(
 				"level"=>$elements[$templatelist[$i]]["level"],
-				"name"=>$elements[$templatelist[$i]]["template"]
+				"name"=>$elements[$templatelist[$i]]["template"],
+				"source"=>substr(str_replace(Array("\n","<br>","<br/>"),"",$elements[$templatelist[$i]]["source"]),0,200)
 			);
 		return $result;
 	}

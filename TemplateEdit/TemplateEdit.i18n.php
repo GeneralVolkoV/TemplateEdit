@@ -23,7 +23,6 @@ $messages['en'] = array(
 	'templateedit-oldfield'               => 'Field is not valid (anymore) or not defined!',
 	'templateedit-articlesaved'           => 'Article saved.',
 	'templateedit-templateedited'         => 'Template $1 edited.',
-	'templateedit-tabdescription'         => 'Edit Template',
 );
  
 $messages['de'] = array(
@@ -47,7 +46,6 @@ $messages['de'] = array(
 	'templateedit-oldfield'               => 'Dieses Feld ist nicht (mehr) vorhanden oder nicht definiert.',
 	'templateedit-articlesaved'           => 'Artikel gespeichert.',
 	'templateedit-templateedited'         => 'Vorlage „$1“ bearbeitet.',
-	'templateedit-tabdescription'         => 'Vorlagen editieren',
 );
  
 $messages['de-formal'] = array(
