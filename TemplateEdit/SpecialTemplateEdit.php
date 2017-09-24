@@ -164,10 +164,9 @@ class TemplateEdit extends SpecialPage {
 		$must='';
 		if($def['must'])
 			$must='<span style="color:red;">'.wfMessage('templateedit-mustfield')->text().'</span> ';
-		$wgOut->addHTML(
-			'<tr><td style="border-bottom:1px solid gray;"><b>'.$name.':</b><br/> '
-			.$must.$def['description'].'</td><td style="border-bottom:1px solid gray;">'
-		);
+		$wgOut->addHTML('<tr><td style="border-bottom:1px solid gray;"><b>'.strip_tags($name).':</b><br/>');
+		$wgOut->addWikiText($must.$def['description']);
+		$wgOut->addHTML('</td><td style="border-bottom:1px solid gray;">');
 		if($def['type']=='PICK') {
 			$wgOut->addHTML(
 				Xml::openElement( 'select', array('name'=>$techname,'size'=>'1', 'style' => 'width: 95%;'.$style ) )
