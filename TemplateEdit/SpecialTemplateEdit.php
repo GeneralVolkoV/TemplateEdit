@@ -139,12 +139,12 @@ class TemplateEdit extends SpecialPage {
 				if(count($params)<5) $params[]='';
 				if(count($params)<6) $params[]='';
 				$indexedfields[$explode[0]]=Array(
-					'type'        => $params[0],
-					'must'        => ($params[1]=='MUST'),
-					'description' => $params[2],
-					'picklist'    => $params[3],
-					'default'	  => $params[4],
-					'migration'	  => $params[5],
+					'type'        => trim(strip_tags($params[0])),
+					'must'        => (trim(strip_tags($params[1]))=='MUST'),
+					'description' => trim(strip_tags($params[2])),
+					'picklist'    => trim(strip_tags($params[3])),
+					'default'	=> trim(strip_tags($params[4])),
+					'migration'	=> trim(strip_tags($params[5])),
 				);
 			}
 			return $indexedfields;
@@ -164,8 +164,8 @@ class TemplateEdit extends SpecialPage {
 		$must='';
 		if($def['must'])
 			$must='<span style="color:red;">'.wfMessage('templateedit-mustfield')->text().'</span> ';
-		$wgOut->addHTML('<tr><td style="border-bottom:1px solid gray;"><b>'.strip_tags($name).':</b><br/>');
-		$wgOut->addWikiText($must.$def['description']);
+		$wgOut->addHTML('<tr><td style="border-bottom:1px solid gray;"><b>'.$name.':</b><br/>');
+		$wgOut->addWikiText(trim($must.$def['description']));
 		$wgOut->addHTML('</td><td style="border-bottom:1px solid gray;">');
 		if($def['type']=='PICK') {
 			$wgOut->addHTML(
@@ -194,6 +194,8 @@ class TemplateEdit extends SpecialPage {
 				$newvalue=preg_replace('%\[\[([^:\|\]]*:|)([^\|\]]+)(\|[^\]]*|)\]\]%','$1$2',$value);
 			if($def['type']=='LINKNONS') 
 				$newvalue=preg_replace('%\[\[([^:\|\]]*:|)([^\|\]]+)(\|[^\]]*|)\]\]%','$2',$value);
+			if($def['type']=='NUMBER') 
+				$newvalue=preg_replace('%[^\d]%','',$value);
 			//background-color:#ffff7f;
 			$wgOut->addHTML(
 				Xml::input( $techname, 250, $newvalue , array( 'style' => 'width: 95%;'.$style ) )
