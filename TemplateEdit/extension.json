@@ -1,0 +1,28 @@
+{
+	"name": "Template Edit",
+	"author": "VolkoV",
+	"version": "2.0.0",
+	"url": "https://www.garetien.de",
+	"descriptionmsg": "templateedit-description",
+	"license-name": "GPL-2.0-or-later",
+	"type": "specialpage",
+	"AutoloadClasses": {
+		"TemplateEditParser": "TemplateEditParser.php",
+		"TemplateEdit"      : "TemplateEdit.php"
+	},
+	"ExtensionMessagesFiles": {
+		"TemplateEditI18n" : "TemplateEdit.i18n.php",
+		"TemplateEditAlias": "TemplateEdit.alias.php"
+	},
+	"Hooks": {
+		"AdminLinks"          : "TemplateEdit::addToAdminLinks",
+		"BaseTemplateToolbox" : "TemplateEdit::onBaseTemplateToolbox"
+	},
+	"SpecialPages": {
+		"TemplateEdit"  : "TemplateEdit"
+	},
+	"SpecialPageGroups": {
+		"TemplateEdit"  : "wiki"
+	},
+	"manifest_version": 2
+}
